@@ -5,6 +5,9 @@ Raylib.SetTargetFPS(60);
 
 int menu = 0;
 int mineCount = 0;
+int flagCount = 0;
+
+bool win = false;
 
 List<Rectangle> buttons = new();
 Tile[,] grid = new Tile[0, 0];
@@ -36,7 +39,8 @@ while (!Raylib.WindowShouldClose())
                             grid[j, k] = new();
                         }
                     }
-                    mineCount = 80 * (i*2 + 1);
+                    mineCount = 40 * (i * 2 + 1);
+                    flagCount = mineCount;
                     menu = 1;
                     GenerateGame();
                     break;
@@ -67,50 +71,81 @@ while (!Raylib.WindowShouldClose())
                 }
                 Raylib.DrawRectangleLines(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Color.DARKGRAY);
 
-                if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), new Rectangle(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0))))
+                if (!win)
                 {
-                    if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
+                    if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), new Rectangle(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0))))
                     {
-                        if (grid[i, j].val == 9)
+                        if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
                         {
-                            menu = 0;
-                        }
-                        else if (grid[i, j].val == 0)
-                        {
-                            for (var k = i - 1; k < i + 2; k++)
+                            if (!grid[i, j].flag)
                             {
-                                for (var l = j - 1; l < j + 2; l++)
+                                if (grid[i, j].val == 9)
                                 {
-                                    if (k < grid.GetLength(0) && l < grid.GetLength(1) && k >= 0 && l >= 0)
+                                    menu = 0;
+                                }
+                                else if (grid[i, j].val == 0)
+                                {
+                                    for (var k = i - 1; k < i + 2; k++)
                                     {
-                                        if (grid[k, l].val != 9 && grid[k, l].shown == false)
+                                        for (var l = j - 1; l < j + 2; l++)
                                         {
-                                            fill(k, l);
-                                            // if (grid[k, l].val == 0)
-                                            // {
-                                            //     i = k;
-                                            //     j = l;
-                                            // }
-                                            // grid[k, l].shown = true;
+                                            if (k < grid.GetLength(0) && l < grid.GetLength(1) && k >= 0 && l >= 0)
+                                            {
+                                                if (grid[k, l].val != 9 && grid[k, l].shown == false)
+                                                {
+                                                    fill(k, l);
+                                                }
+                                            }
                                         }
                                     }
                                 }
+                                else
+                                {
+                                    grid[i, j].shown = true;
+                                }
+                            }
+                            CheckWin();
+                        }
+                        else if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_RIGHT_BUTTON))
+                        {
+                            if (grid[i, j].flag)
+                            {
+                                flagCount++;
+                                grid[i, j].flag = !grid[i, j].flag;
+                            }
+                            else if (flagCount > 0)
+                            {
+                                flagCount--;
+                                grid[i, j].flag = !grid[i, j].flag;
                             }
                         }
-                        else
-                        {
-                            grid[i, j].shown = true;
-                        }
-                    }
-                    else if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_RIGHT_BUTTON))
-                    {
-                        grid[i, j].flag = !grid[i, j].flag;
                     }
                 }
             }
         }
+        if (win)
+        {
+            Raylib.DrawText("YOU WIN!", Raylib.GetScreenWidth() / 2 - 112, Raylib.GetScreenHeight() / 2 -48, 48, Color.BLACK);
+        }
     }
     Raylib.EndDrawing();
+}
+
+void CheckWin()
+{
+    int count = 0;
+    for (int x = 0; x < grid.GetLength(0); x++)
+    {
+        for (int y = 0; y < grid.GetLength(1); y++)
+        {
+            if (!grid[x, y].shown) { count++; }
+            if (count > mineCount) { break; }
+        }
+    }
+    if (count == mineCount)
+    {
+        win = true;
+    }
 }
 
 void fill(int x, int y)
@@ -143,9 +178,15 @@ void GenerateGame()
 
     for (int i = 0; i < mineCount; i++)
     {
+        while (grid[x, y].val == 9)
+        {
+            x = random.Next(0, grid.GetLength(0));
+            y = random.Next(0, grid.GetLength(1));
+        }
         if (grid[x, y].val != 9)
         {
             grid[x, y].val = 9;
+            Console.WriteLine("mine");
             for (int j = x - 1; j < x + 2; j++)
             {
                 for (int k = y - 1; k < y + 2; k++)
@@ -156,11 +197,6 @@ void GenerateGame()
                     }
                 }
             }
-        }
-        else
-        {
-            x = random.Next(0, grid.GetLength(0));
-            y = random.Next(0, grid.GetLength(1));
         }
     }
 }
