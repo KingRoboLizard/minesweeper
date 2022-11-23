@@ -6,6 +6,7 @@ Raylib.SetTargetFPS(60);
 int menu = 0;
 int mineCount = 0;
 int flagCount = 0;
+Texture2D flag = Raylib.LoadTexture("flag.png");
 
 bool win = false;
 
@@ -27,6 +28,7 @@ while (!Raylib.WindowShouldClose())
         for (int i = 0; i < buttons.Count; i++)
         {
             Raylib.DrawRectangleRec(buttons[i], Color.WHITE);
+            Raylib.DrawText($"{(i + 1) * 16}", (int)buttons[i].x, (int)buttons[i].y + 8, 24, Color.BLACK);
             if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_BUTTON_LEFT))
             {
                 if (Raylib.CheckCollisionPointRec(Raylib.GetMousePosition(), buttons[i]))
@@ -60,13 +62,10 @@ while (!Raylib.WindowShouldClose())
                 }
                 else
                 {
+                    Raylib.DrawRectangle(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Color.GRAY);
                     if (grid[i, j].flag == true)
                     {
-                        Raylib.DrawRectangle(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Color.RED);
-                    }
-                    else
-                    {
-                        Raylib.DrawRectangle(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Color.GRAY);
+                        Raylib.DrawTextureEx(flag, new(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0)), 0, (Raylib.GetScreenWidth() / grid.GetLength(0)) / 8, Color.GRAY);
                     }
                 }
                 Raylib.DrawRectangleLines(i * Raylib.GetScreenWidth() / grid.GetLength(0), j * Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Raylib.GetScreenWidth() / grid.GetLength(0), Color.DARKGRAY);
@@ -85,19 +84,7 @@ while (!Raylib.WindowShouldClose())
                                 }
                                 else if (grid[i, j].val == 0)
                                 {
-                                    for (var k = i - 1; k < i + 2; k++)
-                                    {
-                                        for (var l = j - 1; l < j + 2; l++)
-                                        {
-                                            if (k < grid.GetLength(0) && l < grid.GetLength(1) && k >= 0 && l >= 0)
-                                            {
-                                                if (grid[k, l].val != 9 && grid[k, l].shown == false)
-                                                {
-                                                    fill(k, l);
-                                                }
-                                            }
-                                        }
-                                    }
+                                    fill(i, j);
                                 }
                                 else
                                 {
@@ -125,7 +112,7 @@ while (!Raylib.WindowShouldClose())
         }
         if (win)
         {
-            Raylib.DrawText("YOU WIN!", Raylib.GetScreenWidth() / 2 - 112, Raylib.GetScreenHeight() / 2 -48, 48, Color.BLACK);
+            Raylib.DrawText("YOU WIN!", Raylib.GetScreenWidth() / 2 - 112, Raylib.GetScreenHeight() / 2 - 48, 48, Color.BLACK);
         }
     }
     Raylib.EndDrawing();
@@ -186,7 +173,6 @@ void GenerateGame()
         if (grid[x, y].val != 9)
         {
             grid[x, y].val = 9;
-            Console.WriteLine("mine");
             for (int j = x - 1; j < x + 2; j++)
             {
                 for (int k = y - 1; k < y + 2; k++)
@@ -203,13 +189,7 @@ void GenerateGame()
 
 class Tile
 {
-    public int val;
-    public bool shown;
-    public bool flag;
-    public Tile(int value = 0, bool Shown = false, bool flagged = false)
-    {
-        val = value;
-        shown = Shown;
-        flag = flagged;
-    }
+    public int val = 0;
+    public bool shown = false;
+    public bool flag = false;
 }
